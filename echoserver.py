@@ -34,14 +34,15 @@ import struct
 import packets
 import sys
 import time
+import os.path
 
 PORT = 9091
 BUFFER_SIZE = 1024
 PACKET = packets.all_packets()
 SONG_DIRECTORY = "sample_wav_files"
-FILE_EXT = "*wav"
+FILE_EXT = ".wav"
 
-DEBUG_ALL = 0
+DEBUG_ALL = 1
 DEBUG_RCV = DEBUG_ALL | 0
 DEBUG_ARGS = DEBUG_ALL | 0
 DEBUG_CMD = DEBUG_ALL | 0
@@ -70,7 +71,7 @@ RCVD_ACK = 1
 
 # global song information
 current_song = None
-current_frame_size = 0
+current_frame_size = 1024
 song_buffer = []
 current_frame = -1
 fft_bits = 16
@@ -162,16 +163,19 @@ def initialize_song():
         debug_printf(DEBUG_ALL, "No song selected - cannot initialize song")
 
 # all songs in system
-songs = glob.glob(SONG_DIRECTORY + "/" + FILE_EXT)
+# songs = glob.glob(SONG_DIRECTORY + "/" + FILE_EXT)
+songs = []
+for file in os.listdir(SONG_DIRECTORY):
+    if file.endswith(FILE_EXT):
+        songs.append(os.path.join(SONG_DIRECTORY, file))
 
 if __name__ == '__main__':
-    DEBUG_ALL = 0
+    DEBUG_ALL = 1
     DEBUG_RCV = DEBUG_ALL | 0
     DEBUG_ARGS = DEBUG_ALL | 0
     DEBUG_CMD = DEBUG_ALL | 0
     start = 0
     end = 0
-
     for i in range(1,len(sys.argv)):
         if sys.argv[i] == '--rcvd-off':
             debug_printf(DEBUG_CMD, "Turning NEXT RCVD handshake off")
@@ -240,7 +244,8 @@ if __name__ == '__main__':
                         start = time.clock()
 
                         # split the song from it
-                        song_name = data[1:-3].decode('ascii').split('\x03')[0]
+                        song_name_actual = data[1:-3].decode('ascii').split('\x03')[0]
+                        song_name = os.path.join(SONG_DIRECTORY, song_name_actual)
                         debug_printf(DEBUG_RCV, "Song stripped: " + str(song_name))
                         if not song_name in songs:
                             # send back error - song doesnt exist
@@ -251,7 +256,7 @@ if __name__ == '__main__':
                         
                         # get number of bytes for frames
                         # assume big endian
-                        bytes_len = int.from_bytes(data[1 + len(song_name) + 1:], byteorder='big')
+                        bytes_len = int.from_bytes(data[1 + len(song_name_actual) + 1:], byteorder='big')
                         current_frame_size = bytes_len
                         #initializes the song
                         # opens file, converts to FFT, stores frames, and 
