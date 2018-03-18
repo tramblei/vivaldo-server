@@ -42,7 +42,7 @@ PACKET = packets.all_packets()
 SONG_DIRECTORY = "sample_wav_files"
 FILE_EXT = ".wav"
 
-DEBUG_ALL = 1
+DEBUG_ALL = 0
 DEBUG_RCV = DEBUG_ALL | 0
 DEBUG_ARGS = DEBUG_ALL | 0
 DEBUG_CMD = DEBUG_ALL | 0
@@ -74,7 +74,8 @@ current_song = None
 current_frame_size = 1024
 song_buffer = []
 current_frame = -1
-fft_bits = 16
+fft_bits = 32
+ffts_actual_bits = 16 # need to pad out to 32 bits
 fft_size = 1024
 
 def reinit_current_song():
@@ -106,6 +107,7 @@ def initialize_song():
     global current_frame
     global fft_bits
     global fft_size
+    global ffts_actual_bits
     if current_song:
         # note that fft_size is the size of the FFT
         # whereas frame size is the number of bytes packed in each frame
@@ -113,13 +115,16 @@ def initialize_song():
         #       current_frame_size/(fft_bits/8*fft_size) = number of fft frames per TCP frame
         # note that the FFT is actually divided in two (symmetrical), so need
         # to request twice as many points
-        ffts = wav_to_fft.convert_wav_to_fft(current_song, fft_size, fft_bits)
+        ffts = wav_to_fft.convert_wav_to_fft(current_song, fft_size, ffts_actual_bits)
         # these need to be byte arrays
         bytes_per_point = 0
+
+        print(len(ffts[0]))
 
         # determines number of bytes in each point
         # and pads as necessary
         # treat all as unsigned
+
         if fft_bits <= 8:
             struct_pack = 'B'
             bytes_per_point = 1
@@ -150,11 +155,11 @@ def initialize_song():
                     ba += a
 
                 # move to next frame
-                print("Length of frame: " +str(len(ba)))
                 song_buffer.append(ba)
             i=i+1
                 
 
+        print(len(song_buffer))
         # pad last with 0s
 #        for i in range(len(song_buffer[0]) -  len(song_buffer[-1])):
 #            song_buffer[-1] += b"\x00"
@@ -170,7 +175,7 @@ for file in os.listdir(SONG_DIRECTORY):
         songs.append(os.path.join(SONG_DIRECTORY, file))
 
 if __name__ == '__main__':
-    DEBUG_ALL = 1
+    DEBUG_ALL = 0
     DEBUG_RCV = DEBUG_ALL | 0
     DEBUG_ARGS = DEBUG_ALL | 0
     DEBUG_CMD = DEBUG_ALL | 0
@@ -311,7 +316,6 @@ if __name__ == '__main__':
                             ba = beginning + song_buffer[current_frame]
         
     #                        ba += ending
-                            print(ba) 
                             conn.send(ba)
                              
                             if None:
