@@ -145,6 +145,8 @@ def initialize_song():
         print("FFT frames/TCP: " + str(tcp_frames_per_fft))
         i = 0
         # over all ffts
+        song_buffer=[]
+
         while i < len(ffts):
             # need to consume ${fft_frames_per_tcp} in a single TCP frame
             for j in range(tcp_frames_per_fft):
@@ -175,7 +177,7 @@ for file in os.listdir(SONG_DIRECTORY):
         songs.append(os.path.join(SONG_DIRECTORY, file))
 
 if __name__ == '__main__':
-    DEBUG_ALL = 0
+    DEBUG_ALL = 1
     DEBUG_RCV = DEBUG_ALL | 0
     DEBUG_ARGS = DEBUG_ALL | 0
     DEBUG_CMD = DEBUG_ALL | 0

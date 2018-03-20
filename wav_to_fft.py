@@ -148,8 +148,12 @@ def convert_wav_to_fft(file_name, points_per_fft, max_range_bits=16, \
     #    print(ffts_temp.shape)
     #    ffts[i] = ffts_temp
     if (VERBOSE):
-        for i in range(1):#len(ffts)):
-            plt.plot(sample_freqs, ffts[i].astype(int))
+        for i in range(1):
+            if (~mod_freqs):
+                plt.plot(ffts[i].astype(int))
+            else:
+                plt.plot(sample_freqs, ffts[i].astype(int))
+
         plt.show()
         print(ffts[0].astype(int))
     return ffts
@@ -160,5 +164,5 @@ if __name__ == "__main__":
     #convert_wav_to_fft(
     #        'sample_wav_files/Totorro - Home Alone - 08 Tigers & Gorillas.wav',
     #        1024)
-    convert_wav_to_fft('sample_wav_files/sound.wav', 1024, max_range_bits=16)
+    convert_wav_to_fft('sample_wav_files/a.wav', 1024, max_range_bits=16)
     # convert_wav_to_fft('sample_wav_files/only_time.wav', 1000)
